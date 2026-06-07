@@ -1,0 +1,16 @@
+{
+  "network_rules": {
+    "default_policy": "DENY",
+    "dns_allowed": true,
+    "dns_servers": ["8.8.8.8", "8.8.4.4"],
+    "allowed_ports": [80, 443],
+    "blocked_ports": [],
+    "allowed_hosts": [],
+    "blocked_hosts": ["169.254.169.254"],
+    "protocols": {
+      "tcp": true,
+      "udp": true,
+      "icmp": false
+    }
+  }
+}
