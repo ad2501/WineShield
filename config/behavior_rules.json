@@ -1,1 +1,132 @@
-testing files
+{
+  "version": "1.0.0-alpha",
+  "description": "Behavioral pattern detection rules for WineShield's behavior analyzer",
+  "note": "All thresholds reference values from config/default_policy.json",
+
+  "global": {
+    "analyzer_enabled": true,
+    "suspension_enabled": true,
+    "cooldown_seconds": 30,
+    "min_data_points": 3
+  },
+
+  "patterns": [
+    {
+      "id": "ransomware_file_flood",
+      "name": "Ransomware — Rapid File Write",
+      "description": "Detects rapid mass file writes characteristic of ransomware encrypting files",
+      "detection_type": "rate",
+      "metric": "files_written_per_second",
+      "threshold": 50,
+      "window_seconds": 5,
+      "severity": "critical",
+      "action": "suspend_process",
+      "source_layer": "filesystem_guard",
+      "false_positive_mitigation": "Large file extractions and compilations may trigger this"
+    },
+    {
+      "id": "ransomware_file_rename",
+      "name": "Ransomware — Mass File Rename",
+      "description": "Detects mass file renames followed by writes, characteristic of ransomware encryption",
+      "detection_type": "rate",
+      "metric": "files_renamed_per_second",
+      "threshold": 30,
+      "window_seconds": 5,
+      "severity": "critical",
+      "action": "suspend_process",
+      "source_layer": "filesystem_guard"
+    },
+    {
+      "id": "keylogger_x11_grab",
+      "name": "Keylogger — X11 Keyboard Grab",
+      "description": "Detects repeated X11 keyboard state queries typical of keyloggers",
+      "detection_type": "rate",
+      "metric": "x11_keyboard_queries_per_second",
+      "threshold": 100,
+      "window_seconds": 3,
+      "severity": "high",
+      "action": "log_warning",
+      "source_layer": "xephyr_guard",
+      "note": "Full protection requires Xephyr layer enabled"
+    },
+    {
+      "id": "worm_connection_spray",
+      "name": "Network Worm — Connection Spray",
+      "description": "Detects rapid connections to many unique IPs, characteristic of worm propagation",
+      "detection_type": "rate",
+      "metric": "unique_outbound_connections_per_second",
+      "threshold": 15,
+      "window_seconds": 10,
+      "severity": "critical",
+      "action": "kill_process",
+      "source_layer": "network_guard"
+    },
+    {
+      "id": "data_exfiltration",
+      "name": "Data Exfiltration — Read then Send",
+      "description": "Detects sensitive file reads followed immediately by large network sends",
+      "detection_type": "sequence",
+      "sequence": [
+        {"event": "file_read", "path_match": "*.ssh/*, *.gnupg/*, *.config/*, *credentials*"},
+        {"event": "network_send", "bytes_threshold": 1000, "within_seconds": 5}
+      ],
+      "severity": "critical",
+      "action": "kill_process",
+      "source_layer": "behavior_analyzer"
+    },
+    {
+      "id": "privilege_escalation_ptrace",
+      "name": "Privilege Escalation — ptrace Attempt",
+      "description": "Detects attempts to use ptrace on non-child processes",
+      "detection_type": "single",
+      "metric": "ptrace_attempt",
+      "severity": "critical",
+      "action": "kill_process",
+      "source_layer": "syscall_filter",
+      "note": "ptrace is blocked in Balanced and Strict seccomp modes"
+    },
+    {
+      "id": "privilege_escalation_module",
+      "name": "Privilege Escalation — Kernel Module Load",
+      "description": "Detects attempts to load kernel modules",
+      "detection_type": "single",
+      "metric": "init_module_attempt",
+      "severity": "critical",
+      "action": "kill_process",
+      "source_layer": "syscall_filter"
+    },
+    {
+      "id": "beaconing",
+      "name": "C2 Beaconing — Periodic Connection",
+      "description": "Detects periodic connections to the same external host at regular intervals",
+      "detection_type": "pattern",
+      "metric": "periodic_connection",
+      "min_periods": 3,
+      "tolerance_seconds": 5,
+      "severity": "high",
+      "action": "log_warning",
+      "source_layer": "network_guard"
+    },
+    {
+      "id": "process_injection",
+      "name": "Process Injection — Cross-Process Memory",
+      "description": "Detects process_vm_readv/writev which can inject into other processes",
+      "detection_type": "single",
+      "metric": "process_vm_access",
+      "severity": "critical",
+      "action": "kill_process",
+      "source_layer": "syscall_filter",
+      "note": "process_vm_readv/writev blocked in Balanced mode"
+    },
+    {
+      "id": "executable_mmap",
+      "name": "Suspicious — Executable Memory Mapping",
+      "description": "Detects mmap with PROT_EXEC outside known Wine DLL loading patterns",
+      "detection_type": "single",
+      "metric": "executable_mmap_outside_wine",
+      "severity": "high",
+      "action": "log_warning",
+      "source_layer": "syscall_filter"
+    }
+  ]
+}

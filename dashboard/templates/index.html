@@ -1,1 +1,170 @@
-testing files
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WineShield Dashboard — Security Monitoring</title>
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+</head>
+<body>
+  <div id="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-left">
+        <svg class="logo-icon" viewBox="0 0 32 32" width="28" height="28">
+          <rect x="4" y="12" width="24" height="16" rx="3" fill="none" stroke="#00d4aa" stroke-width="2"/>
+          <path d="M10 12V8a6 6 0 0 1 12 0v4" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round"/>
+          <circle cx="16" cy="20" r="3" fill="#00d4aa"/>
+        </svg>
+        <h1>WineShield</h1>
+        <span class="header-subtitle">Security Monitor</span>
+      </div>
+      <div class="header-right">
+        <span class="status-indicator" id="statusIndicator"></span>
+        <span class="status-text" id="statusText">Connecting...</span>
+        <span class="version-badge" id="versionBadge"></span>
+      </div>
+    </header>
+
+    <!-- Top Stats Bar -->
+    <section class="stats-bar" id="statsBar">
+      <div class="stat-card" id="statTotalEvents">
+        <div class="stat-icon stat-icon-events">
+          <svg viewBox="0 0 20 20" width="20" height="20">
+            <circle cx="10" cy="10" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 6v4l3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value" id="statTotalEventsValue">0</span>
+          <span class="stat-label">Total Events</span>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statActiveSessions">
+        <div class="stat-icon stat-icon-sessions">
+          <svg viewBox="0 0 20 20" width="20" height="20">
+            <path d="M3 17a5 5 0 0 1 5-5h4a5 5 0 0 1 5 5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="10" cy="6" r="3" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value" id="statActiveSessionsValue">0</span>
+          <span class="stat-label">Active Sessions</span>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statSecurityMode">
+        <div class="stat-icon stat-icon-mode">
+          <svg viewBox="0 0 20 20" width="20" height="20">
+            <path d="M10 2l7 3v5c0 4-3 7-7 8-4-1-7-4-7-8V5l7-3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M8 11l2 2 4-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value" id="statSecurityModeValue">—</span>
+          <span class="stat-label">Security Mode</span>
+        </div>
+      </div>
+
+      <div class="stat-card" id="statUptime">
+        <div class="stat-icon stat-icon-uptime">
+          <svg viewBox="0 0 20 20" width="20" height="20">
+            <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M10 6v4l3 3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="stat-body">
+          <span class="stat-value" id="statUptimeValue">00:00:00</span>
+          <span class="stat-label">Uptime</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid: Layer Controls + Event Feed -->
+    <div class="main-grid">
+      <!-- Layer Controls -->
+      <section class="panel layer-controls" id="layerControls">
+        <div class="panel-header">
+          <h2>
+            <svg viewBox="0 0 20 20" width="18" height="18">
+              <rect x="2" y="2" width="16" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+              <rect x="2" y="11" width="16" height="7" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            Layer Controls
+          </h2>
+        </div>
+        <div class="panel-body layer-list" id="layerList">
+          <!-- Populated by JS -->
+        </div>
+      </section>
+
+      <!-- Live Event Feed -->
+      <section class="panel event-feed" id="eventFeed">
+        <div class="panel-header">
+          <h2>
+            <svg viewBox="0 0 20 20" width="18" height="18">
+              <path d="M2 4h16M2 10h16M2 16h12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Live Event Feed
+          </h2>
+          <div class="filter-bar">
+            <select id="filterSeverity" class="filter-select">
+              <option value="all">All Severities</option>
+              <option value="info">Info</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
+              <option value="critical">Critical</option>
+            </select>
+            <select id="filterLayer" class="filter-select">
+              <option value="all">All Layers</option>
+            </select>
+            <span class="event-count-badge" id="eventCountBadge">0</span>
+          </div>
+        </div>
+        <div class="panel-body event-list" id="eventList">
+          <div class="event-empty" id="eventEmpty">
+            <svg viewBox="0 0 40 40" width="40" height="40">
+              <circle cx="20" cy="20" r="16" fill="none" stroke="#00d4aa" stroke-width="2" opacity="0.3"/>
+              <path d="M20 12v8l4 4" fill="none" stroke="#00d4aa" stroke-width="2" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+            <p>Waiting for events...</p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- Statistics Section -->
+    <section class="panel statistics-section" id="statisticsSection">
+      <div class="panel-header">
+        <h2>
+          <svg viewBox="0 0 20 20" width="18" height="18">
+            <path d="M2 18h16M4 14l4-6 3 3 5-7" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Statistics
+        </h2>
+      </div>
+      <div class="panel-body stats-grid">
+        <div class="chart-box" id="chartBySeverity">
+          <h3 class="chart-title">Events by Severity</h3>
+          <div class="chart-bars" id="severityChart"></div>
+        </div>
+        <div class="chart-box" id="chartByLayer">
+          <h3 class="chart-title">Events by Layer</h3>
+          <div class="chart-bars" id="layerChart"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <span>WineShield v<span id="footerVersion">—</span></span>
+      <span>•</span>
+      <span id="footerTime">—</span>
+    </footer>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

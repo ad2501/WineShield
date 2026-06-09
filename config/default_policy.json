@@ -1,1 +1,141 @@
-testing files
+{
+  "version": "1.0.0-alpha",
+  "description": "WineShield central configuration \u2014 all runtime settings live here",
+  "general": {
+    "seccomp_mode": "balanced",
+    "log_level": "info",
+    "log_file": "~/.wineshield/events.log",
+    "wineshield_home": "~/.wineshield",
+    "dashboard_port": 5000,
+    "max_events_memory": 1000,
+    "session_timeout_seconds": 3600
+  },
+  "layers": {
+    "syscall_filter": {
+      "enabled": true,
+      "description": "seccomp-BPF syscall filter"
+    },
+    "filesystem_guard": {
+      "enabled": true,
+      "description": "OverlayFS filesystem isolation"
+    },
+    "network_guard": {
+      "enabled": true,
+      "description": "Network monitoring and isolation"
+    },
+    "behavior_analyzer": {
+      "enabled": true,
+      "description": "Runtime behavior pattern detection"
+    },
+    "xephyr_guard": {
+      "enabled": false,
+      "description": "X11 input isolation via Xephyr"
+    },
+    "apparmor": {
+      "enabled": true,
+      "description": "AppArmor profile confinement"
+    }
+  },
+  "seccomp": {
+    "default_mode": "balanced",
+    "modes": {
+      "monitor": {
+        "description": "Log all syscalls, block nothing",
+        "default_action": "LOG",
+        "allow_fork_vfork": true,
+        "block_unsafe": false
+      },
+      "balanced": {
+        "description": "Allow normal operations, block dangerous syscalls",
+        "default_action": "ALLOW",
+        "blocked_syscalls": [
+          "ptrace",
+          "init_module",
+          "delete_module",
+          "kexec_load",
+          "kexec_file_load",
+          "create_module",
+          "iopl",
+          "ioperm",
+          "set_mempolicy",
+          "mbind",
+          "migrate_pages",
+          "move_pages",
+          "bpf",
+          "perf_event_open",
+          "swapcontext"
+        ],
+        "allow_fork_vfork": true
+      },
+      "strict": {
+        "description": "Whitelist-only: only known-safe syscalls permitted",
+        "default_action": "KILL",
+        "whitelist_file": "config/wine_syscall_whitelist.conf",
+        "allow_fork_vfork": false
+      }
+    },
+    "use_tsync": true,
+    "log_denied": true
+  },
+  "filesystem": {
+    "sandbox_base": "~/.wineshield/sandbox",
+    "upper_dir": "~/.wineshield/sandbox/upper",
+    "work_dir": "~/.wineshield/sandbox/work",
+    "merged_dir": "~/.wineshield/sandbox/merged",
+    "lower_dirs": [
+      "/usr/share/wine"
+    ],
+    "read_only_mask": [
+      "~/.ssh",
+      "~/.gnupg",
+      "~/.config",
+      "/etc",
+      "/proc",
+      "/sys"
+    ],
+    "cleanup_on_exit": true,
+    "wineprefix_isolation": true
+  },
+  "network": {
+    "mode": "monitor",
+    "rules_file": "config/network_rules.json",
+    "use_network_namespace": false,
+    "namespace_dns": [
+      "8.8.8.8",
+      "1.1.1.1"
+    ],
+    "log_all_connections": true,
+    "poll_interval_seconds": 2
+  },
+  "behavior": {
+    "rules_file": "config/behavior_rules.json",
+    "analyzer_enabled": true,
+    "suspension_enabled": true,
+    "cooldown_seconds": 30
+  },
+  "xephyr": {
+    "enabled": false,
+    "display": null,
+    "default_width": 1280,
+    "default_height": 720,
+    "auto_configure": true
+  },
+  "apparmor": {
+    "enabled": true,
+    "profile_dir": "config/apparmor",
+    "profiles": {
+      "wine": "wineshield.wine",
+      "wineserver": "wineshield.wineserver",
+      "framework": "wineshield.framework"
+    },
+    "enforce": true
+  },
+  "dashboard": {
+    "enabled": true,
+    "host": "127.0.0.1",
+    "port": 5000,
+    "debug": false,
+    "refresh_interval_ms": 2000,
+    "max_events_display": 200
+  }
+}

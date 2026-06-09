@@ -31,6 +31,25 @@
 
 ## 3. Related Work & Differentiation
 
+### Detailed Tool Comparison
+
+| Dimension | **WineShield** | **Firejail** | **Bubblewrap** | **Sandwine** |
+|-----------|---------------|-------------|----------------|-------------|
+| **Seccomp syscall filter** | ✅ 3 modes (monitor/balanced/strict) | ✅ Yes (2 modes) | ❌ No; uses seccomp only via external wrapper | ❌ No |
+| **Filesystem isolation** | ✅ OverlayFS + bind mounts | ✅ OverlayFS + bind mounts | ✅ bind mounts | ✅ bind mounts |
+| **Network isolation** | ✅ Network namespace + guard | ✅ Network namespace | ✅ Network namespace | ✅ Network namespace |
+| **Wine-specific behavior analysis** | ✅ Custom rules (ransomware, beaconing, keylogger, worm) | ❌ No | ❌ No | ❌ No |
+| **Xephyr X11 guard** | ✅ Separate X server for input isolation | ❌ Shared host X11 | ❌ Shared host X11 | ❌ Shared host X11 |
+| **AppArmor profiles** | ✅ 3 Wine-optimised profiles | ❌ Generic only | ❌ No | ❌ No |
+| **Real-time monitoring dashboard** | ✅ Flask + WebSocket + SQLite | ❌ No | ❌ No | ❌ No |
+| **Event log & audit trail** | ✅ Real-time JSON event log | ❌ Basic log only | ❌ None | ❌ None |
+| **Wine-specific syscall whitelist** | ✅ Profiled and documented | ❌ General-purpose only | ❌ General-purpose only | ❌ General-purpose only |
+| **Privilege dropping** | ✅ --user flag (after seccomp load) | ✅ Yes (SUID) | ✅ Yes (SUID) | ✅ Yes (via bwrap) |
+| **Performance overhead** | Measured per layer (see benchmarks/) | Low (C-based) | Low (C-based) | Moderate (Python wrapper) |
+| **Wine prefix management** | ✅ Auto-detection and isolation | ❌ Manual | ❌ Manual | ✅ Basic |
+| **Configuration format** | JSON policy file + CLI flags | Config file + CLI | CLI only | CLI only |
+| **Browser-based UI** | ✅ Real-time dashboard at localhost:5000 | ❌ Terminal only | ❌ Terminal only | ❌ Terminal only |
+
 ### Existing Tools
 
 | Tool | Approach | Limitations vs WineShield |

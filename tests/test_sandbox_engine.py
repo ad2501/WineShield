@@ -1,1 +1,1 @@
-testing files
+# Placeholder — test coverage lives in other test files

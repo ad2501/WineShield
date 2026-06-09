@@ -38,6 +38,7 @@ wineshield.log
 /var/log/wineshield/
 
 # ---- User data (⚠️ never commit sandbox content) ----
+Notepad++/
 ~/.wine/
 ~/.wineshield/
 *.wineprefix/

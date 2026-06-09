@@ -2,12 +2,12 @@
 # Compiles C extensions and binaries
 
 CC = gcc
-CFLAGS = -Wall -O2 -fPIC
-LDFLAGS = -lseccomp
+CFLAGS = -Wall -O2 -fPIC -D_GNU_SOURCE -DTEST_STANDALONE
+LDFLAGS =
 
-SOURCES = wineshield_seccomp.c
+SOURCES = syscall_monitor.c
 OBJECTS = $(SOURCES:.c=.o)
-TARGET = wineshield_seccomp
+TARGET = syscall_monitor
 
 all: $(TARGET)
 
