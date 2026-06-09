@@ -1,0 +1,42 @@
+# ------------------------------------------------------------------
+# WineShield AppArmor Profile — WineShield Framework
+# Path: config/apparmor/wineshield.framework
+# Covers the WineShield Python components (launcher, dashboard,
+# sandbox engine, guards).  These run on the host side and need
+# access to kernel interfaces (namespace creation, seccomp, etc.).
+# ------------------------------------------------------------------
+
+#include <tunables/global>
+
+profile wineshield-framework /usr/bin/python3* {
+  #include <abstractions/base>
+  #include <abstractions/python>
+
+  # ---- WineShield own files ----
+  @{HOME}/.wineshield/** rw,
+
+  # ---- Access to kernel sandboxing primitives ----
+  capability sys_admin,       # needed for unshare(CLONE_NEWNS)
+  capability sys_ptrace,      # needed for seccomp on child processes
+  capability net_admin,       # needed for network namespace setup
+
+  # ---- Configuration reading ----
+  /etc/wineshield/** r,
+  @{HOME}/.config/wineshield/** r,
+
+  # ---- Logging ----
+  /var/log/wineshield/** rw,
+
+  # ---- Child process management ----
+  /proc/@{PID}/** rw,
+  /sys/fs/cgroup/** r,
+
+  # ---- Executing Wine ----
+  /usr/bin/wine{64,}{,-preloader} ix,
+  /usr/bin/wineserver ix,
+  /usr/bin/Xephyr ix,
+
+  # ---- Networking for dashboard ----
+  network inet stream,
+  network unix stream,
+}

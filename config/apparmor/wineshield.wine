@@ -1,0 +1,77 @@
+# ------------------------------------------------------------------
+# WineShield AppArmor Profile — Wine Process
+# Path: config/apparmor/wineshield.wine
+# Purpose: Confines the main Wine (wine64-preloader) process and its
+#          immediate children.  This profile is loaded by
+#          apparmor_parser during installation and is complementary to
+#          the seccomp-BPF filter (Layer 1).
+#
+# Research note:
+#   Writing a correct AppArmor profile for Wine is hard because Wine
+#   loads many Windows DLLs dynamically and accesses paths that vary
+#   per application.  The rules below are deliberately permissive in
+#   areas where Wine's behaviour cannot be predicted statically.
+#   Tightening them is an ongoing research goal (see docs/RESEARCH.md).
+# ------------------------------------------------------------------
+
+#include <tunables/global>
+
+profile wineshield-wine /usr/bin/wine{64,}{,-preloader} {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+  #include <abstractions/wine>
+
+  # ---- Wine directories (read-write) ----
+  owner @{HOME}/.wine/** rw,
+  owner @{HOME}/.wineshield/** rw,
+
+  # ---- Shared libraries required by Wine ----
+  /usr/lib/** rm,
+  /usr/lib32/** rm,
+  /usr/lib64/** rm,
+  /lib/** rm,
+  /lib32/** rm,
+  /lib64/** rm,
+
+  # ---- Wine binary itself ----
+  /usr/bin/wine{64,} mr,
+  /usr/bin/wine64-preloader mr,
+
+  # ---- Temporary files ----
+  owner /tmp/** rw,
+  owner /var/tmp/** rw,
+
+  # ---- Device access (required for graphics, sound, input) ----
+  /dev/dri/** rw,
+  /dev/snd/** rw,
+  /dev/input/** r,
+  /dev/pts/** rw,
+
+  # ---- Networking (further restricted by Layer 3 Network Guard) ----
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
+  network netlink raw,
+  network unix stream,
+  network unix dgram,
+
+  # ---- Proc & sys access (read-only, minimal) ----
+  /proc/@{PID}/** r,
+  /sys/devices/** r,
+
+  # ---- Deny explicit dangerous operations ----
+  deny /sbin/** x,
+  deny /usr/sbin/** x,
+  deny /etc/shadow r,
+  deny /etc/ssh/** r,
+  deny owner @{HOME}/.ssh/** r,
+  deny owner @{HOME}/.gnupg/** r,
+  deny owner @{HOME}/.config/** w,
+
+  # ---- Capability dropping (complementary to seccomp) ----
+  capability dac_override,
+  capability dac_read_search,
+  capability net_bind_service,
+  capability sys_admin,
+}

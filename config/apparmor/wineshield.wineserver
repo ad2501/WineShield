@@ -1,0 +1,25 @@
+# ------------------------------------------------------------------
+# WineShield AppArmor Profile — wineserver
+# Path: config/apparmor/wineshield.wineserver
+# wineserver is Wine's background server process.  It manages the
+# Wine prefix, registry, and process lifecycle.  It needs slightly
+# broader access than a single wine process.
+# ------------------------------------------------------------------
+
+#include <tunables/global>
+
+profile wineshield-wineserver /usr/bin/wineserver {
+  #include <abstractions/base>
+  #include <abstractions/nameservice>
+
+  owner @{HOME}/.wine/** rw,
+  owner @{HOME}/.wineshield/** rw,
+
+  /usr/lib/** rm,
+  /tmp/** rw,
+
+  network unix stream,
+  network unix dgram,
+
+  /proc/@{PID}/** r,
+}
