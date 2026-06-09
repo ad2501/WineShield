@@ -1,1 +1,14 @@
-testing files
+[Unit]
+Description=WineShield dashboard and sandbox service
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/lib/wineshield/dashboard/app.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

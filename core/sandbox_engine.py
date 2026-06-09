@@ -832,3 +832,21 @@ class WineSandbox:
         """Exit context — tears down the sandbox."""
         self.destroy_sandbox()
         return False  # do not suppress exceptions
+
+
+class SandboxEngine(WineSandbox):
+    """Backward-compatible facade for older integration tests and docs.
+
+    The modern implementation is :class:`WineSandbox`, which expects a config
+    dict and exposes ``create_sandbox``.  Older code instantiated
+    ``SandboxEngine()`` and called ``create_namespaces()`` directly, so this
+    facade preserves that narrow API without changing WineSandbox semantics.
+    """
+
+    def __init__(self, config_dict: dict | None = None):
+        super().__init__(config_dict or {})
+
+    def create_namespaces(self) -> bool:
+        """Create namespaces only and return whether the operation completed."""
+        self._unshare_namespaces()
+        return True

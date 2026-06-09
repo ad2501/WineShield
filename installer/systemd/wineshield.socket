@@ -1,1 +1,9 @@
-testing files
+[Unit]
+Description=WineShield activation socket
+
+[Socket]
+ListenStream=/run/wineshield.sock
+SocketMode=0600
+
+[Install]
+WantedBy=sockets.target

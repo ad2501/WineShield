@@ -38,11 +38,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-import gevent.monkey
-
-# ── Monkey-patch before importing Flask-SocketIO ─────────────────────
-gevent.monkey.patch_all()
-
 import flask
 from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_socketio import SocketIO, emit
@@ -78,7 +73,7 @@ app = Flask(
     static_folder=os.path.join(os.path.dirname(__file__), "static"),
 )
 app.config["SECRET_KEY"] = os.urandom(24).hex()
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="gevent")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # ─────────────────────────────────────────────────────────────────────
 #  1. SQLite Database

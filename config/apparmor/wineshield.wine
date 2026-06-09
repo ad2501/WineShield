@@ -19,7 +19,8 @@
 profile wineshield-wine /usr/bin/wine{64,}{,-preloader} {
   #include <abstractions/base>
   #include <abstractions/nameservice>
-  #include <abstractions/wine>
+  # Wine-specific access is declared explicitly below instead of relying on
+  # a non-standard <abstractions/wine> include that is absent on many systems.
 
   # ---- Wine directories (read-write) ----
   owner @{HOME}/.wine/** rw,
@@ -57,7 +58,7 @@ profile wineshield-wine /usr/bin/wine{64,}{,-preloader} {
   network unix dgram,
 
   # ---- Proc & sys access (read-only, minimal) ----
-  /proc/@{PID}/** r,
+  @{PROC}/@{pid}/** r,
   /sys/devices/** r,
 
   # ---- Deny explicit dangerous operations ----

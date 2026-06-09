@@ -6,8 +6,11 @@
  * and STRICT (only allow whitelist).
  *
  * Compile:  gcc -Wall -Wextra -pedantic -std=c99 -D_GNU_SOURCE \
- *               -DTEST_STANDALONE -o syscall_monitor syscall_monitor.c
+ *               -o syscall_monitor syscall_monitor.c
  */
+#ifndef WINESHIELD_LIBRARY
+#define TEST_STANDALONE 1
+#endif
 
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
@@ -558,13 +561,23 @@ int wineshield_init_seccomp(int mode)
         goto out;
     }
 
-    /* Install the filter with TSYNC so it applies to all threads */
+    /* Install the filter with TSYNC so it applies to all threads.
+     * If the seccomp(2) syscall/TSYNC flag is unavailable, fall back to
+     * prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, ...) for older kernels.
+     */
     if (syscall(SYS_seccomp,
                 SECCOMP_SET_MODE_FILTER,
                 SECCOMP_FILTER_FLAG_TSYNC,
                 &prog) < 0) {
-        perror("[WineShield] seccomp");
-        goto out;
+        if (errno == ENOSYS || errno == EINVAL) {
+            if (prctl(PR_SET_SECCOMP, SECCOMP_MODE_FILTER, &prog) < 0) {
+                perror("[WineShield] prctl SECCOMP_MODE_FILTER");
+                goto out;
+            }
+        } else {
+            perror("[WineShield] seccomp");
+            goto out;
+        }
     }
 
     {
@@ -591,6 +604,7 @@ out:
 /* ------------------------------------------------------------------ */
 /*  Privilege dropping                                                 */
 /* ------------------------------------------------------------------ */
+#ifndef WINESHIELD_LIBRARY
 static int drop_privileges(const char *username)
 {
     if (!username) return 0;  /* no --user flag, skip */
@@ -614,8 +628,6 @@ static int drop_privileges(const char *username)
         perror("[WineShield] setuid");
         return -1;
     }
-
-    /* Verify the drop succeeded */
     if (getuid() != pw->pw_uid || geteuid() != pw->pw_uid) {
         fprintf(stderr, "[WineShield] privilege drop verification FAILED: "
                 "uid=%d, euid=%d, target=%d\n",
@@ -627,6 +639,7 @@ static int drop_privileges(const char *username)
            username, pw->pw_uid);
     return 0;
 }
+#endif
 
 /* ------------------------------------------------------------------ */
 /*  Local test / standalone entry point                                */

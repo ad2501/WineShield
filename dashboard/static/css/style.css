@@ -1,1 +1,3 @@
-testing files
+/* WineShield dashboard compatibility stylesheet.
+   The primary stylesheet is /static/style.css. */
+@import url('../style.css');

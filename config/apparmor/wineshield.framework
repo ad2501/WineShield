@@ -28,7 +28,7 @@ profile wineshield-framework /usr/bin/python3* {
   /var/log/wineshield/** rw,
 
   # ---- Child process management ----
-  /proc/@{PID}/** rw,
+  @{PROC}/@{pid}/** rw,
   /sys/fs/cgroup/** r,
 
   # ---- Executing Wine ----
